@@ -9,8 +9,11 @@ import {
   ClipboardList,
   Compass,
   FlaskConical,
+  Hammer,
+  Info,
   Layers,
   LineChart,
+  Lock,
   Rocket,
   Scale,
   UsersRound,
@@ -434,6 +437,64 @@ export default function HomePage() {
               </Link>
             </li>
           ))}
+        </ul>
+      </section>
+
+      <section
+        aria-label="Disclaimer"
+        className="rounded-xl border border-border bg-muted/30 p-5"
+      >
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <Info className="size-3.5" strokeWidth={2} aria-hidden />
+          A few honest notes
+        </div>
+        <ul className="mt-3 space-y-3 text-xs leading-relaxed text-muted-foreground">
+          <li className="flex items-start gap-2.5">
+            <AlertTriangle
+              className="mt-0.5 size-3.5 shrink-0 text-amber-600"
+              strokeWidth={2}
+              aria-hidden
+            />
+            <span>
+              <span className="font-semibold text-foreground">
+                Unofficial Adobe tool.
+              </span>{' '}
+              This project is not affiliated with, endorsed by, or sponsored
+              by Adobe Inc. “Adobe” and “Adobe Target” are trademarks of
+              Adobe Inc.
+            </span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <Hammer
+              className="mt-0.5 size-3.5 shrink-0 text-sky-600"
+              strokeWidth={2}
+              aria-hidden
+            />
+            <span>
+              <span className="font-semibold text-foreground">
+                Project in development.
+              </span>{' '}
+              Features, copy, and data model are evolving — things may
+              change without notice. Treat outputs as drafts, not
+              gospel.
+            </span>
+          </li>
+          <li className="flex items-start gap-2.5">
+            <Lock
+              className="mt-0.5 size-3.5 shrink-0 text-emerald-600"
+              strokeWidth={2}
+              aria-hidden
+            />
+            <span>
+              <span className="font-semibold text-foreground">
+                Privacy &amp; data.
+              </span>{' '}
+              Everything you type stays in your browser via IndexedDB. No
+              accounts, no analytics, no servers. Screenshot uploads are
+              resized client-side and stored locally. Clear your data any
+              time via your browser’s site-settings &rarr; <em>Clear data</em>.
+            </span>
+          </li>
         </ul>
       </section>
     </div>
