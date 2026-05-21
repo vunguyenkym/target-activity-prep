@@ -57,7 +57,11 @@ const SECTIONS: NavSection[] = [
         label: 'Phase 1 — Plan',
         icon: Compass,
         items: [
-          { href: '/', label: 'Activity Overview', sectionId: 'overview' },
+          {
+            href: '/phase-1/overview',
+            label: 'Activity Overview',
+            sectionId: 'overview',
+          },
           {
             href: '/phase-1/hypothesis',
             label: 'Hypothesis & Metrics',

@@ -1,23 +1,10 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useCurrentActivity } from '@/lib/storage';
-import { OverviewForm } from '@/components/overview-form';
-import { PageHeader } from '@/components/page-header';
-
-export default function OverviewPage() {
-  const activity = useCurrentActivity();
-  return (
-    <div className="space-y-8">
-      <PageHeader
-        eyebrow="Phase 1 — Plan · Step 1 of 7"
-        title="Activity Overview"
-        description="High-level facts about this activity. Only the name is required for this section to count as complete."
-      />
-      {activity ? (
-        <OverviewForm key={activity.id} activity={activity} />
-      ) : (
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      )}
-    </div>
-  );
+// The root URL always lands users on the home page. Activity Overview now
+// lives at /phase-1/overview alongside the other Phase 1 steps, so this
+// redirect is a permanent piece of the IA — anyone deep-linking to / or
+// the bare adobetarget.app domain sees the welcome / guided start, not a
+// form mid-flow.
+export default function RootPage(): never {
+  redirect('/home');
 }

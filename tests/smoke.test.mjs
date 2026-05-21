@@ -8,8 +8,11 @@ const BASE = `http://localhost:${PORT}`;
 const CASES = [
   // Home / landing
   { path: '/home', heading: 'Prep an Adobe Target activity' },
+  // Root path redirects to /home — fetch follows the redirect by default
+  // so we expect the home page heading here too.
+  { path: '/', heading: 'Prep an Adobe Target activity' },
   // Activity Planning
-  { path: '/', heading: 'Activity Overview' },
+  { path: '/phase-1/overview', heading: 'Activity Overview' },
   { path: '/phase-1/hypothesis', heading: 'Hypothesis' },
   { path: '/phase-1/audience', heading: 'Audience' },
   { path: '/phase-1/feasibility', heading: 'Technical Feasibility' },

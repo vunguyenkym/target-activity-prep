@@ -56,7 +56,7 @@ const PHASES: Phase[] = [
       'Shape the hypothesis, the audience, and a credible sample-size check.',
     steps: [
       {
-        href: '/',
+        href: '/phase-1/overview',
         sectionId: 'overview',
         label: 'Activity Overview',
         description: 'Name the activity and set the stage.',
