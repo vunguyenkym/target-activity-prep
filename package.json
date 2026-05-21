@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "next build && node --test tests/smoke.test.mjs"
+    "typecheck": "tsc --noEmit",
+    "test": "next build && node --test tests/smoke.test.mjs",
+    "check": "npm run typecheck && npm test"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
