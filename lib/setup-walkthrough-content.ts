@@ -55,6 +55,14 @@ export type WalkthroughStep = {
     universal?: ExampleField[];
     byType?: Partial<Record<ActivityType, ExampleField[]>>;
   };
+  // Deep-link to the relevant Adobe Experience League page for this
+  // step. We use this rather than embedding Adobe's screenshots
+  // ourselves — copyright-clean, always current. Per-type overrides
+  // for the steps where Adobe's docs split by activity type.
+  docs: {
+    universal: string;
+    byType?: Partial<Record<ActivityType, string>>;
+  };
 };
 
 export const STEPS: WalkthroughStep[] = [
@@ -82,6 +90,15 @@ export const STEPS: WalkthroughStep[] = [
         { label: 'Activity URL', value: 'https://shop.example.com/pricing' },
       ],
     },
+    docs: {
+      universal:
+        'https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/create/test-create-ab',
+      byType: {
+        'auto-target':
+          'https://experienceleague.adobe.com/en/docs/target/using/activities/auto-target/create-auto-target',
+        xt: 'https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/create-targeting/xt-create',
+      },
+    },
   },
   {
     id: 'name',
@@ -98,6 +115,10 @@ export const STEPS: WalkthroughStep[] = [
       universal: [
         { label: 'Name', value: '2026Q2 — Pricing Page Hero CTA Test' },
       ],
+    },
+    docs: {
+      universal:
+        'https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/create/test-create-ab',
     },
   },
   {
@@ -117,6 +138,13 @@ export const STEPS: WalkthroughStep[] = [
         { label: 'Experience B', value: '“Start 14-day trial”' },
         { label: 'Experience C', value: '“Talk to sales”' },
       ],
+    },
+    docs: {
+      universal:
+        'https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/create/test-create-ab',
+      byType: {
+        xt: 'https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/create-targeting/xt-add-experience',
+      },
     },
   },
   {
@@ -171,6 +199,15 @@ export const STEPS: WalkthroughStep[] = [
         ],
       },
     },
+    docs: {
+      universal:
+        'https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/create/ab-audience',
+      byType: {
+        'auto-target':
+          'https://experienceleague.adobe.com/en/docs/target/using/activities/auto-target/auto-target-to-optimize',
+        xt: 'https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/create-targeting/xt-add-experience',
+      },
+    },
   },
   {
     id: 'goals',
@@ -212,6 +249,13 @@ export const STEPS: WalkthroughStep[] = [
         { label: 'Audiences for Reporting', value: 'High-Value Customers' },
       ],
     },
+    docs: {
+      universal:
+        'https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/create/ab-goals-and-settings',
+      byType: {
+        xt: 'https://experienceleague.adobe.com/en/docs/target/using/activities/experience-targeting/create-targeting/xt-goals-and-settings',
+      },
+    },
   },
   {
     id: 'save',
@@ -236,6 +280,10 @@ export const STEPS: WalkthroughStep[] = [
         },
         { label: 'Preview experiences', value: 'A / B / C selectable via dropdown' },
       ],
+    },
+    docs: {
+      universal:
+        'https://experienceleague.adobe.com/en/docs/target/using/activities/abtest/create/ab-goals-and-settings',
     },
   },
 ];

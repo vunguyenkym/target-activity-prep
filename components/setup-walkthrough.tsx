@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ChevronRight,
+  ExternalLink,
   Lightbulb,
 } from 'lucide-react';
 import {
@@ -13,6 +14,7 @@ import {
   STEPS,
   type ActivityType,
 } from '@/lib/setup-walkthrough-content';
+import { STEP_DIAGRAMS } from '@/components/setup-walkthrough-diagrams';
 import { cn } from '@/lib/utils';
 
 export function SetupWalkthrough() {
@@ -67,6 +69,8 @@ export function SetupWalkthrough() {
   const examples =
     step.example.byType?.[type] ?? step.example.universal ?? [];
   const showingExample = exampleShown[step.id] ?? false;
+  const docsUrl = step.docs.byType?.[type] ?? step.docs.universal;
+  const Diagram = STEP_DIAGRAMS[step.id];
 
   return (
     <div className="space-y-6">
@@ -182,6 +186,15 @@ export function SetupWalkthrough() {
           <p className="text-sm text-muted-foreground">{step.purpose}</p>
         </header>
 
+        {Diagram && (
+          <figure className="overflow-hidden rounded-lg border border-border bg-card">
+            <Diagram />
+            <figcaption className="border-t border-border bg-muted/40 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              Schematic — not Adobe&apos;s UI
+            </figcaption>
+          </figure>
+        )}
+
         <p className="text-sm leading-relaxed text-foreground">{step.body}</p>
 
         {typeNote && (
@@ -238,7 +251,7 @@ export function SetupWalkthrough() {
           </div>
         )}
 
-        <div>
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() =>
@@ -250,6 +263,21 @@ export function SetupWalkthrough() {
             <Lightbulb className="size-3.5" strokeWidth={2} aria-hidden />
             {showingExample ? 'Hide example' : 'Show example'}
           </button>
+          {docsUrl && (
+            <a
+              href={docsUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-accent/40"
+            >
+              <ExternalLink
+                className="size-3.5"
+                strokeWidth={2}
+                aria-hidden
+              />
+              See in Adobe docs
+            </a>
+          )}
         </div>
 
         {showingExample && examples.length > 0 && (
