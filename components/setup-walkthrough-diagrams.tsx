@@ -466,11 +466,11 @@ function GoalsDiagram({ className }: DiagramProps) {
       <line x1="24" y1="128" x2="190" y2="128" stroke={ACCENT} strokeWidth="3" strokeLinecap="round" />
       <circle cx="190" cy="128" r="8" fill="#ffffff" stroke={ACCENT} strokeWidth="2" />
 
-      {/* Duration */}
+      {/* Duration — box widened so the ISO date range doesn't bleed out. */}
       <text x="260" y="108" fontSize="10" fontWeight="600" letterSpacing="1.2" fill={MUTED}>
         DURATION
       </text>
-      <rect x="260" y="118" width="156" height="32" rx="4" fill={SURFACE} stroke={RULE} />
+      <rect x="260" y="118" width="216" height="32" rx="4" fill={SURFACE} stroke={RULE} />
       <text x="272" y="138" fontSize="12" fill={INK}>
         2026-06-01 → 2026-06-29
       </text>
