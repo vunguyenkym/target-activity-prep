@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Compass,
   FlaskConical,
+  Footprints,
   Layers,
   LineChart,
   Rocket,
@@ -137,6 +138,11 @@ const SECTIONS: NavSection[] = [
     groups: [
       {
         items: [
+          {
+            href: '/knowledge/setup-walkthrough',
+            label: 'Setup Walk-through',
+            icon: Footprints,
+          },
           {
             href: '/knowledge/activity-types',
             label: 'Adobe Target Activity Types',

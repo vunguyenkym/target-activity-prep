@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Compass,
   FlaskConical,
+  Footprints,
   Hammer,
   Info,
   Layers,
@@ -154,6 +155,13 @@ const KNOWLEDGE_TOPICS: {
   description: string;
   icon: LucideIcon;
 }[] = [
+  {
+    href: '/knowledge/setup-walkthrough',
+    label: 'Setup Walk-through',
+    description:
+      'Interactive A-to-Z guide for creating a Target activity. Works for A/B, Auto-Target, and XT.',
+    icon: Footprints,
+  },
   {
     href: '/knowledge/activity-types',
     label: 'Adobe Target Activity Types',

@@ -25,6 +25,7 @@ const CASES = [
   { path: '/phase-3/value-realisation', heading: 'Value Realisation' },
   { path: '/phase-3/archive', heading: 'Insights' },
   // Knowledge
+  { path: '/knowledge/setup-walkthrough', heading: 'Set up a Target activity' },
   { path: '/knowledge/activity-types', heading: 'Target Activity Types' },
   { path: '/knowledge/methodology', heading: 'Testing Methodology' },
   { path: '/knowledge/pitfalls', heading: 'Common Pitfalls' },
