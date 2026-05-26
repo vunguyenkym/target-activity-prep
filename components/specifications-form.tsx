@@ -58,7 +58,7 @@ export function SpecificationsForm({ activity }: { activity: Activity }) {
       <section className="space-y-3">
         <SectionLabel icon={FileText}>What&apos;s included</SectionLabel>
         <ul className="space-y-1.5 text-sm">
-          <Bullet label="Activity name + type + workspace + dates + owner &amp; approver" />
+          <Bullet label="Activity name + type + workspace + dates + owner & approver" />
           <Bullet label="Hypothesis statement (composed)" />
           <Bullet label="Primary metric + business-significance threshold" />
           <Bullet label="Sample-size outputs + key inputs" />
@@ -95,15 +95,17 @@ export function SpecificationsForm({ activity }: { activity: Activity }) {
 }
 
 function Bullet({ label }: { label: string }) {
+  // Plain text rendering. `label` is always a static literal in this
+  // file today, but the previous dangerouslySetInnerHTML was a latent
+  // XSS sink — anyone passing user input later would have shipped a
+  // vulnerability. Using `&` directly in the parent JSX (instead of
+  // `&amp;`) renders as a single ampersand without needing innerHTML.
   return (
     <li className="flex gap-2">
       <span aria-hidden className="text-primary">
         •
       </span>
-      <span
-        className="text-foreground"
-        dangerouslySetInnerHTML={{ __html: label }}
-      />
+      <span className="text-foreground">{label}</span>
     </li>
   );
 }
