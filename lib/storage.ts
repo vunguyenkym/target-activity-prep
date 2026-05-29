@@ -662,14 +662,92 @@ export async function createActivity(): Promise<Activity> {
   return activity;
 }
 
-// An activity counts as "untouched" if the user hasn't named it yet. Naming
-// is the most reliable signal of intent — without it we'd be hard-pressed
-// to call the activity their work. In that state we replace its contents
-// with the example template so a brand-new user sees a fully-populated
-// activity (and a meaningful Generate Specifications PDF) without clicking
-// anything. Anyone with a typed name keeps whatever they've started.
+// A fully-blank Activity — all fields empty, no example data. Used by the
+// "Clear data" button on the Overview form so users can wipe their work
+// without leaving the app.
+export function makeBlankActivity(): Activity {
+  const now = new Date().toISOString();
+  return {
+    id: crypto.randomUUID(),
+    createdAt: now,
+    updatedAt: now,
+    overview: {
+      name: '',
+      owner: '',
+      siteUrl: '',
+      activityType: 'A/B',
+      startDate: '',
+      endDate: '',
+      context: '',
+      workspace: '',
+      testLocationUrl: '',
+      kbo: '',
+      approver: '',
+    },
+    hypothesis: {
+      currentState: '',
+      change: '',
+      outcome: '',
+      reasoning: '',
+      audienceScope: '',
+      statement: '',
+    },
+    metrics: {
+      primary: null,
+      secondary: [],
+      guardrails: [],
+      businessSignificanceThreshold: '',
+    },
+    sampleSize: {
+      inputs: {
+        baselineRate: 0,
+        mde: 0,
+        mdeType: 'relative',
+        confidence: 95,
+        power: 80,
+        variants: 2,
+        dailyTraffic: 0,
+        expectedLiftNarrative: '',
+      },
+      outputs: { perVariant: 0, total: 0, days: 0 },
+      sensitivity: [],
+    },
+    audience: defaultAudience(),
+    feasibility: defaultFeasibility(),
+    comparison: defaultComparison(),
+    qa: defaultQa(),
+    launch: defaultLaunch(),
+    evaluation: defaultEvaluation(),
+    valueRealisation: defaultValueRealisation(),
+    archive: defaultArchive(),
+    specifications: defaultSpecifications(),
+  };
+}
+
+// Wipe the current activity's data while preserving its id (so the
+// localStorage CURRENT_KEY pointer stays valid) and original createdAt.
+// updatedAt advances to "now" via saveActivity — that delta also signals
+// to isUntouchedActivity that the user deliberately cleared, so the
+// example-prefill doesn't quietly re-overlay.
+export async function clearCurrentActivity(
+  current: Activity,
+): Promise<Activity> {
+  const blank = makeBlankActivity();
+  return saveActivity({
+    ...blank,
+    id: current.id,
+    createdAt: current.createdAt,
+  });
+}
+
+// An activity counts as "untouched" if the user has never modified it.
+// Originally this was a pure "name is empty" check, but a user-cleared
+// activity also has no name yet has been deliberately wiped — so we also
+// require createdAt === updatedAt to consider it untouched. Any save
+// after creation advances updatedAt, so the untouched window only ever
+// covers genuinely brand-new activities.
 function isUntouchedActivity(a: Activity): boolean {
-  return a.overview.name.trim() === '';
+  return a.overview.name.trim() === '' && a.createdAt === a.updatedAt;
 }
 
 async function applyExampleTo(activity: Activity): Promise<Activity> {

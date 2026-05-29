@@ -1,8 +1,10 @@
 'use client';
 
 import { Controller, useForm } from 'react-hook-form';
-import { Clock, History, Sparkles } from 'lucide-react';
+import { Clock, Eraser, History, Sparkles } from 'lucide-react';
 import {
+  clearCurrentActivity,
+  makeBlankActivity,
   makeDefaultActivity,
   saveActivity,
   type Activity,
@@ -51,28 +53,50 @@ export function OverviewForm({ activity }: { activity: Activity }) {
           <History className="size-3" strokeWidth={2} aria-hidden />
           Updated {formatDate(activity.updatedAt)}
         </span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="ml-auto"
-          onClick={async () => {
-            const proceed = window.confirm(
-              'Load a randomised example activity? This will overwrite the current activity.',
-            );
-            if (!proceed) return;
-            const example = await makeDefaultActivity();
-            form.reset(example.overview);
-            await saveActivity({
-              ...example,
-              id: activity.id,
-              createdAt: activity.createdAt,
-            });
-          }}
-        >
-          <Sparkles className="size-3.5" />
-          Load example
-        </Button>
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={async () => {
+              const proceed = window.confirm(
+                'Clear all activity data? This wipes every section back to blank. Can be undone with Load example.',
+              );
+              if (!proceed) return;
+              const blank = makeBlankActivity();
+              // Reset the Overview form first so the visible fields
+              // clear immediately; other section forms remount on
+              // navigation and pick up the cleared activity from IDB.
+              form.reset(blank.overview);
+              await clearCurrentActivity(activity);
+            }}
+          >
+            <Eraser className="size-3.5" />
+            Clear data
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const proceed = window.confirm(
+                'Load a randomised example activity? This will overwrite the current activity.',
+              );
+              if (!proceed) return;
+              const example = await makeDefaultActivity();
+              form.reset(example.overview);
+              await saveActivity({
+                ...example,
+                id: activity.id,
+                createdAt: activity.createdAt,
+              });
+            }}
+          >
+            <Sparkles className="size-3.5" />
+            Load example
+          </Button>
+        </div>
       </div>
 
       <Field id="name" label="Activity name" required>
