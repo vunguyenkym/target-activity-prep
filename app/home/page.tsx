@@ -497,10 +497,14 @@ export default function HomePage() {
               <span className="font-semibold text-foreground">
                 Privacy &amp; data.
               </span>{' '}
-              Everything you type stays in your browser via IndexedDB. No
-              accounts, no analytics, no servers. Screenshot uploads are
-              resized client-side and stored locally. Clear your data any
-              time via your browser’s site-settings &rarr; <em>Clear data</em>.
+              All your data — activity inputs, screenshot uploads, and any
+              feedback you submit via the floating Feedback button — lives
+              only in your browser&rsquo;s IndexedDB. No accounts, no
+              analytics, no servers (yet — feedback delivery is on the
+              roadmap and we&rsquo;ll update this note when it ships).
+              Clear your data via the <em>Clear data</em> button on the
+              Activity Overview, or via your browser&rsquo;s site
+              settings.
             </span>
           </li>
         </ul>

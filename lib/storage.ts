@@ -221,8 +221,25 @@ export type SectionId =
   | 'value-realisation'
   | 'archive';
 
+// Local-only feedback log. Submissions from the floating Feedback button
+// land here until we wire up a server-side delivery path (Vercel cron +
+// Resend, or similar). Keeping them in their own table — wiping the
+// current activity doesn't touch feedback, and vice versa.
+export type FeedbackEntry = {
+  id?: number;
+  page: string;
+  message: string;
+  submittedAt: string;
+  userAgent?: string;
+  viewport?: string;
+  // Set when a future delivery worker forwards the entry to the server.
+  // Null/undefined = still pending local-only.
+  sentAt?: string | null;
+};
+
 class AppDb extends Dexie {
   activities!: Table<Activity, string>;
+  feedback!: Table<FeedbackEntry, number>;
   constructor() {
     super('TargetActivityPrep');
     this.version(1).stores({
@@ -288,6 +305,13 @@ class AppDb extends Dexie {
             patchActivityToV6(row as Record<string, unknown>);
           });
       });
+    // v7 introduces the feedback table. The `++id` syntax tells Dexie to
+    // auto-assign primary keys; submittedAt is indexed so the digest can
+    // scan a day's entries efficiently when we wire up delivery.
+    this.version(7).stores({
+      activities: 'id, updatedAt',
+      feedback: '++id, submittedAt, sentAt',
+    });
   }
 }
 
@@ -890,4 +914,17 @@ export function isSectionComplete(
     default:
       return false;
   }
+}
+
+// -- Feedback ---------------------------------------------------------------
+
+export async function saveFeedback(
+  entry: Omit<FeedbackEntry, 'id' | 'sentAt'>,
+): Promise<number> {
+  const id = await db().feedback.add({ ...entry, sentAt: null });
+  return id as number;
+}
+
+export async function listFeedback(): Promise<FeedbackEntry[]> {
+  return db().feedback.orderBy('submittedAt').reverse().toArray();
 }

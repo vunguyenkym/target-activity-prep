@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Nav } from '@/components/nav';
+import { FeedbackButton } from '@/components/feedback-button';
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
@@ -30,6 +31,7 @@ export default function RootLayout({
             <div className="mx-auto max-w-3xl">{children}</div>
           </main>
         </div>
+        <FeedbackButton />
       </body>
     </html>
   );
