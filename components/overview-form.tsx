@@ -10,6 +10,7 @@ import {
   type Activity,
   type ActivityType,
 } from '@/lib/storage';
+import { ImportActivityButton } from '@/components/import-activity-button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -54,6 +55,7 @@ export function OverviewForm({ activity }: { activity: Activity }) {
           Updated {formatDate(activity.updatedAt)}
         </span>
         <div className="ml-auto flex items-center gap-2">
+          <ImportActivityButton />
           <Button
             type="button"
             variant="ghost"

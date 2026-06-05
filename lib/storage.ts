@@ -798,6 +798,15 @@ export async function saveActivity(activity: Activity): Promise<Activity> {
   return next;
 }
 
+// Single source of truth for the localStorage pointer. Importers and any
+// future code that needs to swap the current activity (e.g., an import,
+// a future workspace switcher) should go through this helper instead of
+// hardcoding the key string.
+export function setCurrentActivityId(id: string): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(CURRENT_KEY, id);
+}
+
 // Strict-mode double-invocation in dev can fire the bootstrap effect twice
 // before the first createActivity resolves. Without this guard, both runs
 // race and write two example activities. We share the in-flight promise so

@@ -1,0 +1,148 @@
+{
+  "overview": {
+    "name": "NTB → MTB acceleration — home-dashboard proximity nudge (POC)",
+    "owner": "Vu Nguyen (Adobe CRO)",
+    "approver": "Mecci (TCB Digital)",
+    "siteUrl": "TCB Mobile Banking App (iOS / Android)",
+    "testLocationUrl": "app location / mbox: home-dashboard-hero (authenticated home screen)",
+    "workspace": "TCB Retail",
+    "activityType": "A/B",
+    "startDate": "2026-07-20",
+    "endDate": "2026-08-17",
+    "kbo": "Increase the share of NTB customers reaching Main-Transaction-Bank (MTB) state within their first 90 days.",
+    "context": "The current NTB journey nudges by calendar date, not by behaviour. A meaningful band of NTB customers transact regularly but stall just below the 40-transaction MTB threshold. This POC tests whether a behaviour-led, proximity-based home-dashboard nudge accelerates them across the threshold faster than the calendar-timed generic message."
+  },
+  "hypothesis": {
+    "audienceScope": "NTB customers (acquired 2026) in the near-MTB band — 25–39 qualifying transactions in the trailing 90 days.",
+    "currentState": "They are transacting but stalling just below the 40-transaction MTB threshold; the journey messages them by calendar date, not by proximity to MTB.",
+    "change": "Replace the calendar-timed generic message with a personalised home-dashboard card showing progress to MTB and a single primary CTA to the highest-leverage next primacy action — complete a bill payment or scan-to-pay (QR).",
+    "outcome": "More near-MTB customers complete an additional primacy action and cross the 40-transaction threshold within the window.",
+    "reasoning": "Behaviour-led prompting at the moment of proximity, anchored to one concrete next action, outperforms date-based generic messaging — consistent with cross-bank patterns (Monzo hero-behaviour onboarding, Nubank time-to-primary compression).",
+    "statement": "For NTB customers with 25–39 qualifying transactions in the trailing 90 days, replacing the calendar-timed generic message with a personalised home-dashboard proximity nudge to the next primacy action will increase the rate of crossing the 40-transaction MTB threshold within the activity window, because proximity-based, action-anchored nudges outperform date-based generic messaging."
+  },
+  "metrics": {
+    "primary": {
+      "name": "Incremental primacy-action completion",
+      "type": "custom",
+      "description": "A pay_bill_success OR qr_payment_success event within 14 days of first exposure (per visitor), measured via A4T."
+    },
+    "secondary": [
+      {
+        "name": "MTB threshold crossings",
+        "type": "custom",
+        "description": "Reaching at least 40 qualifying transactions / trailing 90 days within the window."
+      },
+      {
+        "name": "Bill-pay completion rate",
+        "type": "custom",
+        "description": "pay_bill_success divided by pay_bill_start."
+      },
+      {
+        "name": "7-day QR payment frequency",
+        "type": "custom",
+        "description": "qr_payment_success events per visitor over 7 days."
+      }
+    ],
+    "guardrails": [
+      {
+        "name": "Nudge dismissal / opt-out rate",
+        "type": "custom",
+        "description": "Share of exposed visitors dismissing or opting out."
+      },
+      {
+        "name": "Session-frequency drop or uninstall",
+        "type": "custom",
+        "description": "Over-nudging guard."
+      },
+      {
+        "name": "Negative feedback / complaints",
+        "type": "custom",
+        "description": "Qualitative guard."
+      }
+    ],
+    "businessSignificanceThreshold": "At least a 3 percentage-point absolute lift in primary-action completion to justify rollout, net of effort and any incentive cost."
+  },
+  "sampleSize": {
+    "inputs": {
+      "baselineRate": 18,
+      "mde": 3,
+      "mdeType": "absolute",
+      "confidence": 95,
+      "power": 80,
+      "variants": 2,
+      "dailyTraffic": 600,
+      "expectedLiftNarrative": "Proximity framing plus a concrete next-action anchor expected to lift completion 3–5pp; 3pp set as the MDE floor."
+    },
+    "outputs": { "perVariant": 2750, "total": 5500, "days": 14 },
+    "sensitivity": [
+      { "mdeMultiplier": 0.75, "perVariant": 4860, "days": 17 },
+      { "mdeMultiplier": 1.0, "perVariant": 2750, "days": 14 },
+      { "mdeMultiplier": 1.5, "perVariant": 1215, "days": 14 }
+    ]
+  },
+  "audience": {
+    "description": "NTB customers (acquired 2026) with 25–39 qualifying transactions in the trailing 90 days — the near-MTB band. Authenticated app sessions only.",
+    "targetingRules": "RTCDP audience NTB_near_MTB (trailing-90-day qualifying-transaction count between 25 and 39) activated to Target; entry on authenticated home-dashboard view.",
+    "exclusionRules": "Exclude already-MTB customers (40 or more); customers showing adverse or financial-stress signals (responsible-AI suppression); customers in a conflicting Adobe Campaign onboarding journey; anyone opted out of in-app prompts.",
+    "splitNotes": "50/50 control/variant via Target randomised allocation, keyed to UserID (v93) for stable cross-session assignment. Control = current home dashboard (no nudge) and serves as the holdout for incremental-lift measurement.",
+    "segmentValidated": false
+  },
+  "feasibility": {
+    "implementationMethod": "custom-code",
+    "domStability": "medium",
+    "trackingValidated": false,
+    "integrations": ["a4t", "cdp", "campaign"],
+    "blockersNotes": "Gate go-live: (1) confirm Target deployed on app home dashboard and server-driven; (2) confirm RTCDP audience NTB_near_MTB and the trailing-transaction-count attribute; (3) confirm A4T configured; (4) resolve the v53 Unspecified denominator; (5) supply responsible-AI suppression list (financial-stress signals)."
+  },
+  "comparison": {
+    "control": {
+      "name": "Control",
+      "description": "Current home dashboard — calendar-timed generic message, no proximity nudge.",
+      "url": "",
+      "screenshot": ""
+    },
+    "variants": [
+      {
+        "id": "mtb-variant-a",
+        "name": "Variant A — Proximity nudge card",
+        "description": "Personalised home-dashboard card showing progress to MTB (\"You're 4 activities away this month\") with one primary CTA to the highest-leverage next action (Pay a bill / Scan to pay), a supportive subline, and a dismiss control. Frequency-capped to one prompt per day.",
+        "url": "",
+        "splitPercent": 50,
+        "screenshot": ""
+      }
+    ]
+  },
+  "qa": {
+    "items": {},
+    "notes": "Audience entry fires only for NTB_near_MTB; no leakage to already-MTB or excluded customers. Control truly withholds the nudge (holdout integrity); allocation stable per UserID. Responsible-AI exclusions applied. A4T success metric maps to pay_bill_success / qr_payment_success; guardrail events tracked. Frequency cap (one per day) and dismiss verified. No collision with active Adobe Campaign onboarding. Tested on iOS and Android. Do not start the clock until A4T and the RTCDP audience are confirmed live."
+  },
+  "launch": {
+    "items": {},
+    "launchDate": "2026-07-20",
+    "firstReviewDate": "2026-08-03"
+  },
+  "evaluation": {
+    "outcome": "",
+    "confidenceLevel": 0,
+    "observedLift": "",
+    "observedLiftPercent": 0,
+    "actualDays": 0,
+    "a4tScreenshot": "",
+    "businessImpact": "",
+    "technicalIssues": "",
+    "significanceCall": "",
+    "recommendedNextStep": ""
+  },
+  "valueRealisation": {
+    "driverLabel": "Near-MTB NTB customers entered per quarter",
+    "driverValue": 54000,
+    "changeLabel": "Projected incremental MTB-crossing lift",
+    "changePercent": 3,
+    "valuationLabel": "Annual value of an incremental MTB customer (deposits + product + retention)",
+    "valuationValue": 1800000,
+    "impactType": "incremental-revenue",
+    "methodologyNotes": "Projection only; counts incremental crossings attributable to the variant versus the control holdout, not gross. changePercent is replaced by the holdout-measured lift post-test; valuationValue to be set with TCB Finance.",
+    "caveats": "Pre-launch projection. Requires holdout-measured lift and a TCB-agreed MTB value. Excludes build and any incentive cost."
+  },
+  "archive": { "keyFindings": "", "status": "active" }
+}
