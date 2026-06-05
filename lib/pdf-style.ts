@@ -176,6 +176,65 @@ export function drawSectionFrame(
   doc.roundedRect(x, y, w, h, 2, 2, 'FD');
 }
 
+// Bottom margin to leave clear for the footer (~18 mm gives the brand
+// mark + footer text breathing room). Anything that would land in this
+// strip triggers a page break.
+const FOOTER_RESERVED = 22;
+
+// Page-break helper. Call before drawing a block to ensure it fits on
+// the current page. Returns the y where the block should start (either
+// the current y, or PAGE.marginY on a fresh page).
+export function ensureSpace(
+  doc: jsPDF,
+  currentY: number,
+  needed: number,
+): number {
+  if (currentY + needed > PAGE.height - FOOTER_RESERVED) {
+    doc.addPage();
+    return PAGE.marginY;
+  }
+  return currentY;
+}
+
+// Reads the intrinsic dimensions of an image (data URL or remote src)
+// by loading it into a transient Image element. Used by the PDF
+// generators so screenshots render at their true aspect ratio rather
+// than being stretched into a fixed-ratio cell.
+export function loadImageMeta(
+  src: string,
+): Promise<{ w: number; h: number } | null> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !src) {
+      resolve(null);
+      return;
+    }
+    const img = new window.Image();
+    img.onload = () => {
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (w > 0 && h > 0) resolve({ w, h });
+      else resolve(null);
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Stamp the footer on every page the document has so far. Call once
+// after all content has been drawn — earlier pages would otherwise
+// have no footer if the doc spilled past one page.
+export function drawFooterOnAllPages(
+  doc: jsPDF,
+  left: string,
+  right: string,
+): void {
+  const pageCount = doc.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    drawFooter(doc, `${left} · p${p}/${pageCount}`, right);
+  }
+}
+
 export function drawWrappedText(
   doc: jsPDF,
   text: string,

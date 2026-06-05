@@ -8,11 +8,13 @@ import {
   COLORS,
   PAGE,
   TYPE,
-  drawFooter,
+  drawFooterOnAllPages,
   drawRule,
   drawSectionLabel,
   drawTile,
   drawWrappedText,
+  ensureSpace,
+  loadImageMeta,
   setFont,
 } from './pdf-style';
 import {
@@ -34,15 +36,33 @@ export async function generateActivitySummaryPdf(
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
   await registerPdfFonts(doc);
 
+  // Pre-load screenshot dimensions in parallel so we can render at the
+  // actual aspect ratios. The Summary shows control + first variant in
+  // the comparison row, plus an optional A4T dashboard shot.
+  const comparisonScreens = [
+    activity.comparison.control.screenshot,
+    ...activity.comparison.variants.slice(0, 1).map((v) => v.screenshot),
+  ];
+  const [comparisonMetas, a4tMeta] = await Promise.all([
+    Promise.all(
+      comparisonScreens.map((s) =>
+        s ? loadImageMeta(s) : Promise.resolve(null),
+      ),
+    ),
+    activity.evaluation.a4tScreenshot
+      ? loadImageMeta(activity.evaluation.a4tScreenshot)
+      : Promise.resolve(null),
+  ]);
+
   let y: number = PAGE.marginY;
   y = drawHeader(doc, activity, y);
   y = drawHypothesisBreakdown(doc, activity, y);
   y = drawPlannedVsActual(doc, activity, y);
-  y = drawComparison(doc, activity, y);
+  y = drawComparison(doc, activity, y, comparisonMetas);
   y = drawValueRealisation(doc, activity, y);
-  y = drawA4tScreenshot(doc, activity, y);
+  y = drawA4tScreenshot(doc, activity, y, a4tMeta);
   drawKeyFindings(doc, activity, y);
-  drawFooter(
+  drawFooterOnAllPages(
     doc,
     `Adobe Target Activity Prep · Summary · ${new Date().toLocaleString()}`,
     activity.id.slice(0, 8),
@@ -59,7 +79,15 @@ function drawHeader(doc: jsPDF, a: Activity, y: number): number {
 
   setFont(doc, 'bold', TYPE.title);
   doc.setTextColor(COLORS.ink);
-  doc.text(overview.name || 'Untitled activity', PAGE.marginX, y + 9);
+  // Wrap long activity titles instead of clipping the right edge.
+  const titleLines = doc.splitTextToSize(
+    overview.name || 'Untitled activity',
+    CONTENT_WIDTH,
+  );
+  const titleLineHeight = TYPE.title * 0.42;
+  doc.text(titleLines, PAGE.marginX, y + 9);
+  const extraTitleH = (titleLines.length - 1) * titleLineHeight;
+  y += extraTitleH;
 
   setFont(doc, 'normal', TYPE.bodySmall);
   doc.setTextColor(COLORS.muted);
@@ -116,6 +144,9 @@ function drawHypothesisBreakdown(
   ) {
     return y;
   }
+  // Pre-measure so the breakdown block can break onto a fresh page if
+  // the hypothesis prose is unusually long.
+  y = ensureSpace(doc, y, 60);
   y = drawSectionLabel(doc, 'Hypothesis', y);
 
   const rows: { label: string; text: string }[] = [
@@ -157,6 +188,7 @@ function drawHypothesisBreakdown(
 }
 
 function drawPlannedVsActual(doc: jsPDF, a: Activity, y: number): number {
+  y = ensureSpace(doc, y, 70);
   y = drawSectionLabel(doc, 'Planned vs actual', y);
 
   // Outcome chip — right-aligned on the section's first row, since outcome
@@ -315,9 +347,12 @@ function drawOutcomeChip(
   doc.text(labelText, x + padX, y - 0.4, { charSpace: 0.6 });
 }
 
-function drawComparison(doc: jsPDF, a: Activity, y: number): number {
-  y = drawSectionLabel(doc, 'Experience comparison', y);
-
+function drawComparison(
+  doc: jsPDF,
+  a: Activity,
+  y: number,
+  metas: ({ w: number; h: number } | null)[],
+): number {
   const entries = [
     {
       label: a.comparison.control.name || 'Control',
@@ -333,45 +368,73 @@ function drawComparison(doc: jsPDF, a: Activity, y: number): number {
 
   const colCount = entries.length;
   const gap = 4;
-  // Mockups are 1000×600 (5:3). Anchor on a fixed height so they always
-  // keep their aspect — never stretched. Centre the row in the content
-  // area.
-  const imgH = 28;
-  const cellW = imgH * (1000 / 600);
-  const rowWidth = cellW * colCount + gap * (colCount - 1);
-  const xStart = PAGE.marginX + Math.max(0, (CONTENT_WIDTH - rowWidth) / 2);
+  // Equal-width cells. Each image then fits within its cell at its real
+  // aspect ratio — vertical mobile screenshots stay slim and centred;
+  // landscape screenshots fill the cell width.
+  const cellW = (CONTENT_WIDTH - gap * (colCount - 1)) / colCount;
+  const maxImgH = 90;
+  const fallbackAspect = 1000 / 600;
+
+  type Slot = { displayW: number; displayH: number; hasImage: boolean };
+  const slots: Slot[] = entries.map((entry, i) => {
+    const meta = entry.screenshot ? metas[i] : null;
+    const aspect = meta ? meta.w / meta.h : fallbackAspect;
+    let displayW = cellW;
+    let displayH = cellW / aspect;
+    if (displayH > maxImgH) {
+      displayH = maxImgH;
+      displayW = maxImgH * aspect;
+    }
+    return { displayW, displayH, hasImage: !!entry.screenshot };
+  });
+  const rowImageH = Math.max(...slots.map((s) => s.displayH));
+
+  y = ensureSpace(doc, y, rowImageH + 22);
+  y = drawSectionLabel(doc, 'Experience comparison', y);
 
   for (let i = 0; i < colCount; i++) {
-    const x = xStart + i * (cellW + gap);
+    const cellX = PAGE.marginX + i * (cellW + gap);
+    const slot = slots[i];
     const entry = entries[i];
+    const imgX = cellX + (cellW - slot.displayW) / 2;
     doc.setDrawColor(COLORS.rule);
     doc.setLineWidth(0.2);
-    doc.roundedRect(x, y, cellW, imgH, 1.5, 1.5);
-    if (entry.screenshot) {
+    doc.roundedRect(imgX, y, slot.displayW, slot.displayH, 1.5, 1.5);
+    if (slot.hasImage && entry.screenshot) {
       try {
-        doc.addImage(entry.screenshot, 'JPEG', x, y, cellW, imgH, undefined, 'FAST');
+        doc.addImage(
+          entry.screenshot,
+          'JPEG',
+          imgX,
+          y,
+          slot.displayW,
+          slot.displayH,
+          undefined,
+          'FAST',
+        );
       } catch {
-        drawPlaceholder(doc, x, y, cellW, imgH);
+        drawPlaceholder(doc, imgX, y, slot.displayW, slot.displayH);
       }
     } else {
-      drawPlaceholder(doc, x, y, cellW, imgH);
+      drawPlaceholder(doc, imgX, y, slot.displayW, slot.displayH);
     }
     setFont(doc, 'bold', TYPE.bodySmall);
     doc.setTextColor(COLORS.ink);
-    doc.text(entry.label, x, y + imgH + 3.5);
+    doc.text(entry.label, cellX, y + rowImageH + 3.5);
 
     setFont(doc, 'normal', TYPE.caption);
     doc.setTextColor(COLORS.muted);
     const descLines = doc.splitTextToSize(entry.description || '—', cellW);
-    doc.text(descLines.slice(0, 3), x, y + imgH + 7);
+    doc.text(descLines.slice(0, 3), cellX, y + rowImageH + 7);
   }
 
-  return y + imgH + 14;
+  return y + rowImageH + 14;
 }
 
 function drawValueRealisation(doc: jsPDF, a: Activity, y: number): number {
   const v = a.valueRealisation;
   const impact = computeValueImpact(v);
+  y = ensureSpace(doc, y, 45);
   y = drawSectionLabel(doc, 'Value realisation', y);
 
   // 4 letter-only tiles so the user's long labels don't overflow.
@@ -431,22 +494,27 @@ function drawValueRealisation(doc: jsPDF, a: Activity, y: number): number {
   return y + 4;
 }
 
-function drawA4tScreenshot(doc: jsPDF, a: Activity, y: number): number {
+function drawA4tScreenshot(
+  doc: jsPDF,
+  a: Activity,
+  y: number,
+  meta: { w: number; h: number } | null,
+): number {
   const screenshot = a.evaluation.a4tScreenshot;
   if (!screenshot) return y;
-  y = drawSectionLabel(doc, 'A4T dashboard', y);
-  // Fit width to CONTENT_WIDTH, height derived from a 16:9 default. We
-  // don't know the user's screenshot ratio, so we constrain by max height
-  // and centre by width — same approach as the mockups.
-  const targetH = 38;
-  // Best-effort: fit by height, but cap width to CONTENT_WIDTH. If the
-  // shot is taller-than-wide, fit by width instead.
-  let w = targetH * (16 / 9);
-  let h = targetH;
-  if (w > CONTENT_WIDTH) {
-    w = CONTENT_WIDTH;
-    h = w * (9 / 16);
+  // Honour the screenshot's real aspect. Default to 16:9 only when we
+  // couldn't load metadata. Cap height at half a page so a very tall
+  // shot doesn't dominate the page.
+  const aspect = meta ? meta.w / meta.h : 16 / 9;
+  const maxH = 130;
+  let w = CONTENT_WIDTH;
+  let h = w / aspect;
+  if (h > maxH) {
+    h = maxH;
+    w = h * aspect;
   }
+  y = ensureSpace(doc, y, h + 12);
+  y = drawSectionLabel(doc, 'A4T dashboard', y);
   const x = PAGE.marginX + (CONTENT_WIDTH - w) / 2;
   try {
     doc.addImage(screenshot, 'JPEG', x, y, w, h, undefined, 'FAST');
@@ -459,6 +527,9 @@ function drawA4tScreenshot(doc: jsPDF, a: Activity, y: number): number {
 function drawKeyFindings(doc: jsPDF, a: Activity, y: number) {
   const findings = a.archive.keyFindings.trim();
   if (!findings) return;
+  setFont(doc, 'normal', TYPE.body);
+  const lines = doc.splitTextToSize(findings, CONTENT_WIDTH);
+  y = ensureSpace(doc, y, 10 + lines.length * (TYPE.body * 0.42));
   y = drawSectionLabel(doc, 'Key findings', y);
   drawWrappedText(
     doc,
